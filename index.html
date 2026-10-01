@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeroCampus - Complete College Portal</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- QR Code Library for Digital ID -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.6);
+    }
+
+    /* ID Card 3D Flip */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    
+    /* Glassmorphism effects */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .dark .glass-panel {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Print styles for Admit Card and ID */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printableArea, #printableArea * {
+        visibility: visible;
+      }
+      #printableArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200 flex flex-col">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- Login Gateway -->
+  <div id="authGate" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 transition-opacity duration-300">
+    <div class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900/90 p-6 shadow-2xl shadow-brand-500/10">
+      <div class="text-center space-y-3 mb-6">
+        <div class="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-brand-500/30">M</div>
+        <div>
+          <h2 class="text-2xl font-black text-white">Welcome to MeroCampus</h2>
+          <p class="text-sm text-slate-300">Sign in to access your campus portal</p>
+        </div>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label for="loginEmail" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Email</label>
+          <input id="loginEmail" type="email" value="student@merocampus.edu" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none" placeholder="you@college.edu" required>
+        </div>
+
+        <div>
+          <label for="loginPassword" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Password</label>
+          <input id="loginPassword" type="password" value="123456" class="w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-3 text-sm text-white placeholder:text-slate-500 focus:border-brand-500 focus:outline-none" placeholder="Enter password" required>
+        </div>
+
+        <div class="rounded-xl border border-brand-500/20 bg-brand-500/5 p-3 text-xs text-brand-100">
+          <p class="font-semibold mb-1">Demo accounts</p>
+          <p>Student: student@merocampus.edu / 123456</p>
+          <p>Teacher: teacher@merocampus.edu / 123456</p>
+          <p>Admin: admin@merocampus.edu / 123456</p>
+        </div>
+
+        <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/25 transition hover:opacity-95">
+          Login to Portal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Global Modal Container -->
+  <div id="globalModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+    <div id="modalCard" class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
+      <!-- Modal Content Populated via JS -->
+    </div>
+  </div>
+
+  <!-- Navigation Header -->
+  <header class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200 dark:border-slate-700/80 px-4 lg:px-6 py-2.5 shadow-sm">
+    <div class="flex items-center justify-between gap-4 max-w-7xl mx-auto">
+      
+      <!-- Brand Logo & Mobile Sidebar Toggle -->
+      <div class="flex items-center gap-3">
+        <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        
+        <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchTab('dashboard')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 font-black text-xl">
+            M
+          </div>
+          <div>
+            <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-brand-600 to-indigo-600 dark:from-brand-500 dark:to-indigo-400 bg-clip-text text-transparent">MeroCampus</span>
+            <span class="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 ml-1">Portal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="hidden md:flex flex-1 max-w-md mx-4 relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <input type="text" id="globalSearch" placeholder="Search routines, question papers, notes, notices..." class="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 dark:bg-slate-700/60 border border-transparent focus:border-brand-500 dark:focus:border-brand-500 rounded-full focus:outline-none focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100">
+      </div>
+
+      <!-- Right Header Tools -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- Role Switcher -->
+        <div class="relative inline-block text-left">
+          <select id="roleSelector" onchange="handleRoleChange(this.value)" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-slate-700 border border-brand-200 dark:border-slate-600 text-brand-700 dark:text-brand-300 focus:outline-none cursor-pointer">
+            <option value="student">👨‍🎓 Student View</option>
+            <option value="teacher">👨‍🏫 Teacher View</option>
+            <option value="admin">🛠️ Admin View</option>
+          </select>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2.5 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+          <i id="themeIcon" class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- Notification Bell -->
+        <div class="relative">
+          <button onclick="toggleNotificationDropdown()" class="p-2.5 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition relative">
+            <i class="fa-solid fa-bell"></i>
+            <span id="notifBadge" class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-800"></span>
+          </button>
+          
+          <!-- Dropdown -->
+          <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 z-50">
+            <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+              <h4 class="font-bold text-sm">Notifications</h4>
+              <button onclick="clearNotifs()" class="text-[11px] text-brand-600 dark:text-brand-400 hover:underline">Mark all read</button>
+            </div>
+            <div id="notifList" class="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- User Profile Pill -->
+        <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+          <img id="userAvatar" src="https://placehold.co/100x100/6366f1/ffffff?text=RN" alt="User Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-brand-500 shadow-sm">
+          <div class="hidden lg:block text-left leading-tight">
+            <div id="userName" class="text-xs font-bold truncate max-w-[110px]">Rohan Nepal</div>
+            <div id="userSub" class="text-[10px] text-slate-500 dark:text-slate-400 truncate">CSIT • Roll #14</div>
+          </div>
+        </div>
+
+        <button id="logoutBtn" onclick="logoutUser()" class="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:border-rose-200 hover:text-rose-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-rose-500/40 dark:hover:text-rose-400">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="hidden sm:inline">Logout</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Context Selector Bar (Faculty & Semester) -->
+  <section class="bg-gradient-to-r from-brand-900 via-indigo-900 to-slate-900 text-white px-4 py-3 shadow-inner">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
+      
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-indigo-200 font-medium text-xs flex items-center gap-1.5">
+          <i class="fa-solid fa-graduation-cap text-brand-400"></i> Active Curriculum:
+        </span>
+        
+        <!-- Faculty Select -->
+        <div class="relative">
+          <select id="facultySelect" onchange="changeFaculty(this.value)" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
+            <option value="CSIT" class="text-slate-900">B.Sc. CSIT (Computer Science & IT)</option>
+            <option value="BCA" class="text-slate-900">BCA (Bachelor in Computer Application)</option>
+            <option value="BBA" class="text-slate-900">BBA (Bachelor of Business Admin)</option>
+            <option value="Civil" class="text-slate-900">B.E. Civil Engineering</option>
+            <option value="BIT" class="text-slate-900">BIT (Bachelor of Info Tech)</option>
+          </select>
+        </div>
+
+        <!-- Semester Select -->
+        <div class="relative">
+          <select id="semesterSelect" onchange="changeSemester(this.value)" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none cursor-pointer">
+            <option value="1" class="text-slate-900">1st Semester</option>
+            <option value="2" class="text-slate-900">2nd Semester</option>
+            <option value="3" class="text-slate-900">3rd Semester</option>
+            <option value="4" class="text-slate-900">4th Semester</option>
+            <option value="5" class="text-slate-900" selected>5th Semester</option>
+            <option value="6" class="text-slate-900">6th Semester</option>
+            <option value="7" class="text-slate-900">7th Semester</option>
+            <option value="8" class="text-slate-900">8th Semester</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Context Info Badge -->
+      <div class="flex items-center gap-4 text-xs text-indigo-200">
+        <div class="flex items-center gap-1.5">
+          <i class="fa-solid fa-calendar-day text-brand-400"></i>
+          <span>Academic Session: <strong class="text-white font-semibold">2026 Batch</strong></span>
+        </div>
+        <div class="hidden lg:flex items-center gap-1.5">
+          <i class="fa-solid fa-building-columns text-emerald-400"></i>
+          <span>Campus: <strong class="text-white font-semibold">Main Academic Block</strong></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MAIN WRAPPER WITH SIDEBAR & CONTENT -->
+  <div class="flex-1 max-w-7xl w-full mx-auto flex relative">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/80 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between p-4 shadow-lg lg:shadow-none">
+      <div class="space-y-1">
+        
+        <div id="portalSidebarLabel" class="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          Student Portal
+        </div>
+
+        <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-chart-pie w-5 text-center text-brand-500"></i> Dashboard
+        </button>
+
+        <button onclick="switchTab('routine')" data-tab="routine" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-clock w-5 text-center text-blue-500"></i> Routine & Schedule
+        </button>
+
+        <button onclick="switchTab('attendance')" data-tab="attendance" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-user-check w-5 text-center text-emerald-500"></i> Attendance Tracker
+        </button>
+
+        <button onclick="switchTab('questions')" data-tab="questions" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-file-lines w-5 text-center text-purple-500"></i> Past Questions
+        </button>
+
+        <button onclick="switchTab('notes')" data-tab="notes" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-book-open w-5 text-center text-amber-500"></i> Notes & Syllabus
+        </button>
+
+        <button onclick="switchTab('assignments')" data-tab="assignments" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-pen-ruler w-5 text-center text-rose-500"></i> Assignments
+        </button>
+
+        <button onclick="switchTab('notices')" data-tab="notices" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-bullhorn w-5 text-center text-cyan-500"></i> Notice Board
+        </button>
+
+        <button onclick="switchTab('fees')" data-tab="fees" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-wallet w-5 text-center text-teal-500"></i> Fee Dues
+        </button>
+
+        <button onclick="switchTab('idcard')" data-tab="idcard" class="nav-item w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition">
+          <i class="fa-solid fa-id-card w-5 text-center text-indigo-500"></i> Digital Student ID
+        </button>
+
+      </div>
+
+      <!-- Quick Action Buttons for Special Roles -->
+      <div id="roleActionContainer" class="pt-4 border-t border-slate-200 dark:border-slate-700">
+        <!-- Rendered based on role -->
+      </div>
+    </aside>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-30 hidden lg:hidden"></div>
+
+    <!-- Content Area -->
+    <main class="flex-1 p-4 lg:p-6 overflow-x-hidden min-w-0">
+      
+      <!-- DASHBOARD TAB -->
+      <section id="tab-dashboard" class="tab-content space-y-6">
+        
+        <!-- Welcome Banner -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 p-6 text-white shadow-xl shadow-brand-500/10">
+          <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <span id="dashGreeting" class="px-2.5 py-1 rounded-full bg-white/20 text-xs font-semibold uppercase tracking-wider backdrop-blur-md">Good Morning</span>
+              <h1 class="text-2xl sm:text-3xl font-extrabold mt-2" id="dashWelcomeTitle">Welcome back, Rohan!</h1>
+              <p class="text-indigo-100 text-sm mt-1 max-w-xl" id="dashWelcomeSub">You have 2 classes today and 1 assignment pending for Operating Systems.</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="switchTab('routine')" class="px-4 py-2 bg-white text-brand-700 rounded-xl font-bold text-xs hover:bg-slate-100 transition shadow">
+                View Today's Routine
+              </button>
+            </div>
+          </div>
+          <!-- Decorative shapes -->
+          <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        </div>
+
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Stat 1: Attendance Ring -->
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3">
+            <div class="relative w-14 h-14 flex items-center justify-center">
+              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path class="text-slate-200 dark:text-slate-700" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="text-emerald-500" stroke-dasharray="82, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <span class="absolute font-bold text-xs">82%</span>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Attendance</p>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">82.4%</h3>
+              <p class="text-[10px] text-emerald-600 font-medium">Above required 75%</p>
+            </div>
+          </div>
+
+          <!-- Stat 2: Pending Assignments -->
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xl">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Pending Homework</p>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">2 Tasks</h3>
+              <p class="text-[10px] text-amber-600 font-medium">Due in 2 days</p>
+            </div>
+          </div>
+
+          <!-- Stat 3: Upcoming Exams -->
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xl">
+              <i class="fa-solid fa-file-pen"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Terminal Exam</p>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">In 14 Days</h3>
+              <p class="text-[10px] text-purple-600 font-medium">Routine published</p>
+            </div>
+          </div>
+
+          <!-- Stat 4: CGPA / Grade -->
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xl">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">Current CGPA</p>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">3.74 / 4.0</h3>
+              <p class="text-[10px] text-brand-600 font-medium">Top 5% in Faculty</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2 Column Section: Today Routine & Notice Snippets -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Today's Routine Column -->
+          <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-base flex items-center gap-2">
+                <i class="fa-solid fa-calendar-day text-brand-500"></i>
+                Today's Class Schedule
+              </h3>
+              <button onclick="switchTab('routine')" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">Full Timetable &rarr;</button>
+            </div>
+
+            <div id="dashTodayRoutineList" class="space-y-3">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Latest Notices Widget -->
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-base flex items-center gap-2">
+                <i class="fa-solid fa-bell text-amber-500"></i>
+                Recent Campus Notices
+              </h3>
+              <button onclick="switchTab('notices')" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">All Notices</button>
+            </div>
+
+            <div id="dashNoticeWidget" class="space-y-3">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Access Banners -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div onclick="switchTab('questions')" class="cursor-pointer bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-4 rounded-2xl shadow hover:opacity-95 transition flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold opacity-90">Question Bank</p>
+              <h4 class="font-bold text-base mt-0.5">Solve Past Papers</h4>
+            </div>
+            <i class="fa-solid fa-folder-open text-2xl opacity-80"></i>
+          </div>
+
+          <div onclick="switchTab('notes')" class="cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 rounded-2xl shadow hover:opacity-95 transition flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold opacity-90">Course Content</p>
+              <h4 class="font-bold text-base mt-0.5">Download Notes</h4>
+            </div>
+            <i class="fa-solid fa-book text-2xl opacity-80"></i>
+          </div>
+
+          <div onclick="switchTab('idcard')" class="cursor-pointer bg-gradient-to-r from-blue-500 to-cyan-600 text-white p-4 rounded-2xl shadow hover:opacity-95 transition flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold opacity-90">Campus Identity</p>
+              <h4 class="font-bold text-base mt-0.5">Digital ID Card</h4>
+            </div>
+            <i class="fa-solid fa-address-card text-2xl opacity-80"></i>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ROUTINE TAB -->
+      <section id="tab-routine" class="tab-content space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+          <div>
+            <h2 class="text-xl font-bold">Class Timetable & Routine</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Weekly class routine for <span class="currentFacultyTag font-semibold text-brand-600"></span> - <span class="currentSemTag font-semibold text-brand-600"></span></p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="downloadRoutinePDF()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+              <i class="fa-solid fa-download"></i> Download Schedule
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-700/50 text-xs uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700">
+                <tr>
+                  <th class="p-4">Day</th>
+                  <th class="p-4">07:00 AM - 08:30 AM</th>
+                  <th class="p-4">08:30 AM - 10:00 AM</th>
+                  <th class="p-4 text-center">10:00 - 10:30 AM</th>
+                  <th class="p-4">10:30 AM - 12:00 PM</th>
+                </tr>
+              </thead>
+              <tbody id="routineTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                <!-- Dynamic insertion -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ATTENDANCE TAB -->
+      <section id="tab-attendance" class="tab-content space-y-6 hidden">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <h2 class="text-xl font-bold">Subject-wise Attendance Tracker</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Minimum 75% attendance required for board exam eligibility.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+              Total Present: 124 / 150 Classes
+            </div>
+            <div class="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-bold">
+              Overall: 82.6%
+            </div>
+          </div>
+        </div>
+
+        <div id="attendanceGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- PAST QUESTIONS TAB -->
+      <section id="tab-questions" class="tab-content space-y-6 hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+          <div>
+            <h2 class="text-xl font-bold">Semester Question Bank</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Access board & internal exam questions from 2021 to 2025.</p>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <input type="text" id="questionSearch" onkeyup="filterQuestions()" placeholder="Filter by subject/year..." class="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-700 border-none rounded-xl focus:outline-none">
+            <select id="questionYearFilter" onchange="filterQuestions()" class="px-3 py-1.5 text-xs bg-slate-100 dark:bg-slate-700 border-none rounded-xl font-semibold focus:outline-none">
+              <option value="all">All Years</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="questionsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- NOTES & SYLLABUS TAB -->
+      <section id="tab-notes" class="tab-content space-y-6 hidden">
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold">Syllabus & Lecture Notes</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Course materials provided by faculty professors.</p>
+          </div>
+        </div>
+
+        <div id="notesContainer" class="space-y-4">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- ASSIGNMENTS TAB -->
+      <section id="tab-assignments" class="tab-content space-y-6 hidden">
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold">Assignments Portal</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Submit homework and project reports before deadline.</p>
+          </div>
+        </div>
+
+        <div id="assignmentsList" class="space-y-4">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- NOTICES TAB -->
+      <section id="tab-notices" class="tab-content space-y-6 hidden">
+        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+          <div>
+            <h2 class="text-xl font-bold">Campus Bulletin Board</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Official notices from administration and faculty head.</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="filterNoticeCat('all')" class="px-3 py-1 bg-brand-500 text-white rounded-lg text-xs font-semibold">All</button>
+            <button onclick="filterNoticeCat('Exam')" class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-xs font-semibold rounded-lg">Exams</button>
+            <button onclick="filterNoticeCat('Academic')" class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-xs font-semibold rounded-lg">Academic</button>
+            <button onclick="filterNoticeCat('Events')" class="px-3 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-xs font-semibold rounded-lg">Events</button>
+          </div>
+        </div>
+
+        <div id="noticesFullList" class="space-y-4">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- FEE DUES TAB -->
+      <section id="tab-fees" class="tab-content space-y-6 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Total Semester Fee</p>
+            <h3 class="text-2xl font-black mt-1 text-slate-800 dark:text-slate-100">NPR 1,25,000</h3>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Paid Amount</p>
+            <h3 class="text-2xl font-black mt-1 text-emerald-600">NPR 95,000</h3>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Remaining Dues</p>
+            <h3 class="text-2xl font-black mt-1 text-rose-600">NPR 30,000</h3>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-base">Fee Breakdown</h3>
+            <button onclick="simulateFeePayment()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
+              <i class="fa-solid fa-credit-card mr-1"></i> Pay Dues (Digital Wallet)
+            </button>
+          </div>
+
+          <div class="space-y-3 divide-y divide-slate-100 dark:divide-slate-700">
+            <div class="pt-3 flex justify-between items-center text-sm">
+              <div>
+                <p class="font-bold">Tuition Fee (5th Semester)</p>
+                <p class="text-xs text-slate-500">Regular academic instruction</p>
+              </div>
+              <span class="font-bold">NPR 75,000</span>
+            </div>
+            <div class="pt-3 flex justify-between items-center text-sm">
+              <div>
+                <p class="font-bold">Computer & AI Lab Charge</p>
+                <p class="text-xs text-slate-500">Hardware & high-speed Internet lab</p>
+              </div>
+              <span class="font-bold">NPR 25,000</span>
+            </div>
+            <div class="pt-3 flex justify-between items-center text-sm">
+              <div>
+                <p class="font-bold">Library & E-Resources</p>
+                <p class="text-xs text-slate-500">IEEE & ACM journal access</p>
+              </div>
+              <span class="font-bold">NPR 15,000</span>
+            </div>
+            <div class="pt-3 flex justify-between items-center text-sm">
+              <div>
+                <p class="font-bold">Internal Exam & Assessment Fee</p>
+                <p class="text-xs text-slate-500">Answer sheets and evaluation</p>
+              </div>
+              <span class="font-bold">NPR 10,000</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIGITAL ID CARD TAB -->
+      <section id="tab-idcard" class="tab-content space-y-6 hidden">
+        <div class="text-center max-w-md mx-auto space-y-2">
+          <h2 class="text-2xl font-black">Digital Campus Identity</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Click card to flip and reveal verified QR code for library & attendance scanner.</p>
+        </div>
+
+        <div class="flex justify-center my-6">
+          <div class="w-80 h-96 perspective-1000 cursor-pointer" onclick="flipIdCard()">
+            <div id="idCardFlipInner" class="relative w-full h-full duration-700 transform-style-3d shadow-2xl rounded-2xl">
+              
+              <!-- Front Side -->
+              <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-brand-700 via-indigo-800 to-slate-900 text-white p-5 rounded-2xl backface-hidden flex flex-col justify-between border-2 border-brand-400/30">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-white text-brand-700 flex items-center justify-center font-black">M</div>
+                    <span class="font-bold tracking-tight text-sm">MeroCampus College</span>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500 text-white uppercase">Active</span>
+                </div>
+
+                <div class="flex flex-col items-center my-2">
+                  <img id="cardStudentImg" src="https://placehold.co/150x150/6366f1/ffffff?text=RN" class="w-24 h-24 rounded-full object-cover border-4 border-white/20 shadow-md">
+                  <h3 class="font-extrabold text-lg mt-2" id="cardStudentName">Rohan Nepal</h3>
+                  <p class="text-xs text-indigo-200" id="cardStudentFaculty">B.Sc. CSIT - 5th Semester</p>
+                </div>
+
+                <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <span class="text-indigo-200 block text-[9px] uppercase font-semibold">Symbol No:</span>
+                    <strong id="cardSymbolNo">28192/078</strong>
+                  </div>
+                  <div>
+                    <span class="text-indigo-200 block text-[9px] uppercase font-semibold">Reg. No:</span>
+                    <strong id="cardRegNo">5-2-003-112-2022</strong>
+                  </div>
+                  <div>
+                    <span class="text-indigo-200 block text-[9px] uppercase font-semibold">Valid Till:</span>
+                    <strong>Dec 2027</strong>
+                  </div>
+                  <div>
+                    <span class="text-indigo-200 block text-[9px] uppercase font-semibold">Blood Group:</span>
+                    <strong>O +ve</strong>
+                  </div>
+                </div>
+
+                <div class="text-[9px] text-center text-indigo-300 font-mono">
+                  TAP TO VIEW QR & BACK SIDE
+                </div>
+              </div>
+
+              <!-- Back Side -->
+              <div class="absolute inset-0 w-full h-full bg-slate-900 text-white p-5 rounded-2xl backface-hidden rotate-y-180 flex flex-col justify-between items-center border-2 border-brand-400/30">
+                <div class="text-center">
+                  <h4 class="font-bold text-xs uppercase tracking-wider text-indigo-300">Identity Verification</h4>
+                  <p class="text-[10px] text-slate-400">Scan at college gate or library counter</p>
+                </div>
+
+                <!-- QR Code Display -->
+                <div id="qrcode" class="p-3 bg-white rounded-xl shadow-lg"></div>
+
+                <div class="text-center text-[10px] text-slate-400 space-y-1">
+                  <p>Property of MeroCampus Academic Admin.</p>
+                  <p class="text-brand-400">If found, return to nearest campus block.</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center gap-3">
+          <button onclick="printIdCard()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-2">
+            <i class="fa-solid fa-print"></i> Print Digital ID
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script>
+    /* Global Application State */
+    const appState = {
+      role: 'student', // student, teacher, admin
+      currentFaculty: 'CSIT',
+      currentSemester: '5',
+      theme: 'light',
+      isLoggedIn: false,
+      user: {
+        name: 'Rohan Nepal',
+        symbol: '28192/078',
+        reg: '5-2-003-112-2022',
+        avatar: 'https://placehold.co/100x100/6366f1/ffffff?text=RN'
+      }
+    };
+
+    const demoUsers = {
+      'student@merocampus.edu': {
+        password: '123456',
+        role: 'student',
+        name: 'Rohan Nepal',
+        sub: 'CSIT • Roll #14',
+        avatar: 'https://placehold.co/100x100/6366f1/ffffff?text=RN'
+      },
+      'teacher@merocampus.edu': {
+        password: '123456',
+        role: 'teacher',
+        name: 'Prof. Dr. A. K. Sharma',
+        sub: 'Department Head',
+        avatar: 'https://placehold.co/100x100/10b981/ffffff?text=AS'
+      },
+      'admin@merocampus.edu': {
+        password: '123456',
+        role: 'admin',
+        name: 'Campus Admin',
+        sub: 'System Controller',
+        avatar: 'https://placehold.co/100x100/ef4444/ffffff?text=AD'
+      }
+    };
+
+    function showLoginGate() {
+      const authGate = document.getElementById('authGate');
+      if (authGate) authGate.classList.remove('hidden');
+    }
+
+    function hideLoginGate() {
+      const authGate = document.getElementById('authGate');
+      if (authGate) authGate.classList.add('hidden');
+    }
+
+    function applyUserSession(userData, roleValue) {
+      appState.role = roleValue || userData.role;
+      appState.isLoggedIn = true;
+      appState.user.name = userData.name;
+      appState.user.sub = userData.sub;
+      appState.user.avatar = userData.avatar;
+
+      document.getElementById('userName').innerText = userData.name;
+      document.getElementById('userSub').innerText = userData.sub;
+      document.getElementById('userAvatar').src = userData.avatar;
+      document.getElementById('cardStudentName').innerText = userData.name;
+      document.getElementById('cardStudentImg').src = userData.avatar;
+      document.getElementById('logoutBtn').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.add('inline-flex');
+      document.getElementById('roleSelector').value = appState.role;
+      handleRoleChange(appState.role, false);
+    }
+
+    function loginUser(event) {
+      event.preventDefault();
+      const emailValue = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const passwordValue = document.getElementById('loginPassword').value.trim();
+      const userData = demoUsers[emailValue];
+
+      if (!userData || userData.password !== passwordValue) {
+        showToast('Invalid email or password. Use one of the demo accounts shown below.', 'error');
+        return;
+      }
+
+      localStorage.setItem('merocampus_auth', JSON.stringify({ email: emailValue, role: userData.role }));
+      applyUserSession(userData, userData.role);
+      hideLoginGate();
+      showToast(`Welcome back, ${userData.name.split(' ')[0]}!`, 'success');
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('merocampus_auth');
+      appState.isLoggedIn = false;
+      document.getElementById('logoutBtn').classList.add('hidden');
+      document.getElementById('logoutBtn').classList.remove('inline-flex');
+      document.getElementById('loginEmail').value = 'student@merocampus.edu';
+      document.getElementById('loginPassword').value = '123456';
+      showLoginGate();
+      showToast('You have been logged out successfully.', 'info');
+    }
+
+    function initAuthSession() {
+      const storedAuth = localStorage.getItem('merocampus_auth');
+      if (!storedAuth) {
+        document.getElementById('logoutBtn').classList.add('hidden');
+        document.getElementById('logoutBtn').classList.remove('inline-flex');
+        showLoginGate();
+        return;
+      }
+
+      try {
+        const parsedAuth = JSON.parse(storedAuth);
+        const userData = demoUsers[parsedAuth.email] || demoUsers['student@merocampus.edu'];
+        applyUserSession(userData, parsedAuth.role || userData.role);
+        hideLoginGate();
+      } catch (error) {
+        localStorage.removeItem('merocampus_auth');
+        showLoginGate();
+      }
+    }
+
+    /* Pre-populated Mock Database for Faculties & Semesters */
+    const mockData = {
+      CSIT: {
+        5: {
+          subjects: [
+            { name: "Operating Systems", code: "CSC314", teacher: "Prof. Dr. A. K. Sharma" },
+            { name: "Database Management Systems", code: "CSC315", teacher: "Er. Sunita Verma" },
+            { name: "Computer Networks", code: "CSC316", teacher: "Prof. Rajesh Shrestha" },
+            { name: "Design & Analysis of Algorithms", code: "CSC317", teacher: "Dr. Bikash Thapa" },
+            { name: "Artificial Intelligence", code: "CSC318", teacher: "Er. Pradeep Poudel" }
+          ],
+          questions: [
+            { year: "2025", subject: "Operating Systems", type: "Board Exam", file: "OS_Board_2025.pdf", size: "1.4 MB" },
+            { year: "2024", subject: "Database Management Systems", type: "Board Exam", file: "DBMS_Board_2024.pdf", size: "2.1 MB" },
+            { year: "2024", subject: "Computer Networks", type: "Internal Model", file: "CN_Model_2024.pdf", size: "980 KB" },
+            { year: "2023", subject: "Design & Analysis of Algorithms", type: "Board Exam", file: "DAA_Board_2023.pdf", size: "1.8 MB" },
+            { year: "2022", subject: "Artificial Intelligence", type: "Board Exam", file: "AI_Board_2022.pdf", size: "1.2 MB" }
+          ],
+          notes: [
+            { chapter: "Chapter 1: Process Scheduling & Threads", subject: "Operating Systems", author: "Prof. Dr. A. K. Sharma", date: "2026-02-10" },
+            { chapter: "Chapter 3: Normalization & B-Trees", subject: "Database Management Systems", author: "Er. Sunita Verma", date: "2026-02-14" },
+            { chapter: "Chapter 2: Subnetting & IP Routing", subject: "Computer Networks", author: "Prof. Rajesh Shrestha", date: "2026-02-18" },
+            { chapter: "Chapter 4: Dynamic Programming & Greedy Approach", subject: "Design & Analysis of Algorithms", author: "Dr. Bikash Thapa", date: "2026-02-22" }
+          ],
+          assignments: [
+            { title: "Deadlock Detection Algorithm Implementation", subject: "Operating Systems", dueDate: "2026-10-05", status: "Pending" },
+            { title: "ER Diagram for E-Commerce Platform", subject: "Database Management Systems", dueDate: "2026-10-10", status: "Submitted" }
+          ]
+        }
+      },
+      BCA: {
+        5: {
+          subjects: [
+            { name: "Java Programming", code: "BCA301", teacher: "Er. K. B. KC" },
+            { name: "Web Technology II", code: "BCA302", teacher: "Er. Saroj Bhattarai" },
+            { name: "Software Engineering", code: "BCA303", teacher: "Prof. Archana Giri" }
+          ],
+          questions: [
+            { year: "2025", subject: "Java Programming", type: "Board Exam", file: "Java_2025.pdf", size: "1.1 MB" }
+          ],
+          notes: [
+            { chapter: "Chapter 1: Spring Boot Fundamentals", subject: "Java Programming", author: "Er. K. B. KC", date: "2026-01-15" }
+          ],
+          assignments: [
+            { title: "RESTful API Development Project", subject: "Web Technology II", dueDate: "2026-10-12", status: "Pending" }
+          ]
+        }
+      }
+    };
+
+    /* Notices Data */
+    const noticesList = [
+      { id: 1, title: "5th Semester Terminal Exam Schedule Published", category: "Exam", date: "Oct 01, 2026", text: "The upcoming mid-term examinations for B.Sc. CSIT & BCA will commence from October 15, 2026. Hall tickets will be issued 3 days prior." },
+      { id: 2, title: "National Tech Hackathon 2026 Registration Open", category: "Events", date: "Sep 28, 2026", text: "All students are encouraged to form teams of 3 to 4 members and register for the inter-college hackathon organized by MeroCampus Tech Club." },
+      { id: 3, title: "Library Digital Resource Maintenance", category: "Academic", date: "Sep 25, 2026", text: "IEEE online portal will undergo scheduled database maintenance this Saturday from 10:00 AM to 02:00 PM." }
+    ];
+
+    /* Notifications Pool */
+    let notifications = [
+      { title: "New Assignment Added", desc: "Prof. Sharma posted Deadlock Assignment", time: "10 mins ago", read: false },
+      { title: "Exam Notice", desc: "Terminal Exam Schedule Published", time: "1 hour ago", read: false }
+    ];
+
+    /* On Initialization */
+    window.addEventListener('DOMContentLoaded', () => {
+      initAuthSession();
+      initApp();
+      setupEventListeners();
+      document.getElementById('loginForm').addEventListener('submit', loginUser);
+    });
+
+    function initApp() {
+      updateContextUI();
+      renderDashboard();
+      renderRoutine();
+      renderAttendance();
+      renderQuestions();
+      renderNotes();
+      renderAssignments();
+      renderNotices();
+      renderNotifications();
+      generateQRCode();
+    }
+
+    function setupEventListeners() {
+      // Mobile sidebar toggle
+      const mobileBtn = document.getElementById('mobileMenuBtn');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+
+      mobileBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+      });
+
+      overlay.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      });
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`tab-${tabId}`);
+      if (target) target.classList.remove('hidden');
+
+      // Highlight navigation
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabId) {
+          btn.classList.add('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
+        } else {
+          btn.classList.remove('bg-brand-50', 'dark:bg-brand-900/30', 'text-brand-600', 'dark:text-brand-400', 'font-bold');
+        }
+      });
+
+      // Close mobile sidebar if open
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('sidebarOverlay').classList.add('hidden');
+    }
+
+    function changeFaculty(fac) {
+      appState.currentFaculty = fac;
+      showToast(`Faculty changed to ${fac}`, 'info');
+      updateContextUI();
+      refreshDataViews();
+    }
+
+    function changeSemester(sem) {
+      appState.currentSemester = sem;
+      showToast(`Switched to Semester ${sem}`, 'info');
+      updateContextUI();
+      refreshDataViews();
+    }
+
+    function updateContextUI() {
+      document.querySelectorAll('.currentFacultyTag').forEach(el => el.innerText = appState.currentFaculty);
+      document.querySelectorAll('.currentSemTag').forEach(el => el.innerText = `${appState.currentSemester}th Sem`);
+    }
+
+    function refreshDataViews() {
+      renderDashboard();
+      renderRoutine();
+      renderAttendance();
+      renderQuestions();
+      renderNotes();
+      renderAssignments();
+    }
+
+    /* Role Changing Logic */
+    function handleRoleChange(role, showToastMessage = true) {
+      appState.role = role;
+      const roleActionContainer = document.getElementById('roleActionContainer');
+      const portalLabel = document.getElementById('portalSidebarLabel');
+      
+      if (role === 'teacher') {
+        appState.user.name = "Prof. Dr. A. K. Sharma";
+        appState.user.sub = "Department Head";
+        appState.user.avatar = "https://placehold.co/100x100/10b981/ffffff?text=AS";
+        if (portalLabel) portalLabel.innerText = 'Teacher Portal';
+        if (showToastMessage) showToast("Switched to Faculty / Teacher View", "success");
+        
+        roleActionContainer.innerHTML = `
+          <div class="space-y-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Teacher Controls</p>
+            <button onclick="openMarkAttendanceModal()" class="w-full text-xs py-2 px-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition">
+              <i class="fa-solid fa-clipboard-user mr-1"></i> Mark Attendance
+            </button>
+            <button onclick="openUploadNotesModal()" class="w-full text-xs py-2 px-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition">
+              <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Upload Study Material
+            </button>
+          </div>
+        `;
+      } else if (role === 'admin') {
+        appState.user.name = "Campus Admin";
+        appState.user.sub = "System Controller";
+        appState.user.avatar = "https://placehold.co/100x100/ef4444/ffffff?text=AD";
+        if (portalLabel) portalLabel.innerText = 'Admin Portal';
+        if (showToastMessage) showToast("Switched to Campus Admin View", "warning");
+
+        roleActionContainer.innerHTML = `
+          <div class="space-y-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Admin Controls</p>
+            <button onclick="openPostNoticeModal()" class="w-full text-xs py-2 px-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition">
+              <i class="fa-solid fa-bullhorn mr-1"></i> Broadcast Notice
+            </button>
+            <button onclick="openUserManagementModal()" class="w-full text-xs py-2 px-3 bg-slate-700 text-white rounded-xl font-bold hover:bg-slate-800 transition">
+              <i class="fa-solid fa-users mr-1"></i> Manage Users
+            </button>
+          </div>
+        `;
+      } else {
+        appState.user.name = "Rohan Nepal";
+        appState.user.sub = "CSIT • Roll #14";
+        appState.user.avatar = "https://placehold.co/100x100/6366f1/ffffff?text=RN";
+        if (portalLabel) portalLabel.innerText = 'Student Portal';
+        if (showToastMessage) showToast("Switched to Student View", "info");
+        roleActionContainer.innerHTML = "";
+      }
+
+      document.getElementById('userName').innerText = appState.user.name;
+      document.getElementById('userSub').innerText = appState.user.sub;
+      document.getElementById('userAvatar').src = appState.user.avatar;
+      document.getElementById('cardStudentName').innerText = appState.user.name;
+      document.getElementById('cardStudentImg').src = appState.user.avatar;
+
+      renderDashboard();
+    }
+
+    function getPortalDashboardConfig() {
+      if (appState.role === 'teacher') {
+        return {
+          greeting: 'Faculty Panel',
+          title: `Welcome back, ${appState.user.name.split(' ')[0]}!`,
+          subtitle: 'You have 3 classes scheduled today and 24 attendance records to review.',
+          routine: [
+            { name: 'Operating Systems', code: 'CSC314', teacher: 'Rohan Nepal', time: '08:00 AM - 09:30 AM', status: 'LIVE NOW' },
+            { name: 'Database Systems', code: 'CSC315', teacher: 'Ananya Adhikari', time: '10:00 AM - 11:30 AM', status: 'UPCOMING' },
+            { name: 'AI Lab Review', code: 'LAB-02', teacher: 'Lab Team', time: '01:00 PM - 02:00 PM', status: 'SCHEDULED' }
+          ],
+          noticeTitle: 'Teacher Updates',
+          notices: [
+            { id: 101, title: 'Midterm Attendance Report Submitted', category: 'Academic', date: 'Today', text: '26 student records are ready to be finalized and sent to administration.' },
+            { id: 102, title: 'Internal Lab Schedule Updated', category: 'Events', date: 'Today', text: 'The AI lab session has been shifted to Block B, Lab 2 for this week.' },
+            { id: 103, title: 'Assignment Review Deadline', category: 'Exam', date: 'Tomorrow', text: 'All assignment marks must be entered before 5:00 PM tomorrow.' }
+          ]
+        };
+      }
+
+      if (appState.role === 'admin') {
+        return {
+          greeting: 'Administration',
+          title: `Welcome back, ${appState.user.name.split(' ')[0]}!`,
+          subtitle: '123 students, 18 faculty members, and 9 active system alerts need attention today.',
+          routine: [
+            { name: 'Fee Collection Review', code: 'FIN-01', teacher: 'Accounts Team', time: '09:00 AM - 10:00 AM', status: 'ACTIVE' },
+            { name: 'Notice Board Audit', code: 'COM-02', teacher: 'Communication Desk', time: '11:00 AM - 12:00 PM', status: 'UPCOMING' },
+            { name: 'User Access Review', code: 'SEC-04', teacher: 'IT Support', time: '02:00 PM - 03:00 PM', status: 'SCHEDULED' }
+          ],
+          noticeTitle: 'Admin Alerts',
+          notices: [
+            { id: 201, title: 'Semester Fee Status Updated', category: 'Academic', date: 'Today', text: 'The month-end fee report has been synced with the finance dashboard.' },
+            { id: 202, title: 'System Backup Completed', category: 'Events', date: 'Today', text: 'The campus MIS backup completed successfully with no errors reported.' },
+            { id: 203, title: 'New Faculty Onboarding', category: 'Academic', date: 'Tomorrow', text: 'Three new faculty accounts have been created and are awaiting approval.' }
+          ]
+        };
+      }
+
+      return {
+        greeting: 'Good Morning',
+        title: `Welcome back, ${appState.user.name.split(' ')[0]}!`,
+        subtitle: 'You have 2 classes today and 1 assignment pending for Operating Systems.',
+        routine: null,
+        noticeTitle: 'Campus Notices',
+        notices: noticesList
+      };
+    }
+
+    function renderDashboard() {
+      const config = getPortalDashboardConfig();
+      document.getElementById('dashGreeting').innerText = config.greeting;
+      document.getElementById('dashWelcomeTitle').innerText = config.title;
+      document.getElementById('dashWelcomeSub').innerText = config.subtitle;
+
+      const routineContainer = document.getElementById('dashTodayRoutineList');
+      if (config.routine) {
+        routineContainer.innerHTML = config.routine.map((item, index) => {
+          const statusClass = item.status === 'LIVE NOW' || item.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+          return `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700/60 gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm">
+                  0${index + 1}
+                </div>
+                <div>
+                  <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${item.name} (${item.code})</h4>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">${item.teacher} • ${item.time}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 self-end sm:self-center">
+                <span class="text-xs font-semibold text-slate-500"><i class="fa-regular fa-clock mr-1"></i>${item.time}</span>
+                <span class="text-[10px] font-extrabold px-2 py-1 rounded-md ${statusClass}">${item.status}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        const activeData = (mockData[appState.currentFaculty] && mockData[appState.currentFaculty][appState.currentSemester]) || mockData.CSIT['5'];
+        const subjects = activeData.subjects;
+        routineContainer.innerHTML = subjects.slice(0, 3).map((sub, index) => {
+          const times = ["07:00 AM - 08:30 AM", "08:30 AM - 10:00 AM", "10:30 AM - 12:00 PM"];
+          const statusClass = index === 0 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300";
+          const statusText = index === 0 ? "LIVE NOW" : "UPCOMING";
+
+          return `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700/60 gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm">
+                  0${index + 1}
+                </div>
+                <div>
+                  <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${sub.name} (${sub.code})</h4>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">${sub.teacher} • Room 402</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 self-end sm:self-center">
+                <span class="text-xs font-semibold text-slate-500"><i class="fa-regular fa-clock mr-1"></i>${times[index]}</span>
+                <span class="text-[10px] font-extrabold px-2 py-1 rounded-md ${statusClass}">${statusText}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const noticeWidget = document.getElementById('dashNoticeWidget');
+      noticeWidget.innerHTML = config.notices.slice(0, 3).map(n => `
+        <div onclick="viewNoticeDetail(${n.id})" class="p-3 rounded-xl bg-slate-50 dark:bg-slate-700/40 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">${n.category}</span>
+            <span class="text-[10px] text-slate-400">${n.date}</span>
+          </div>
+          <h5 class="font-bold text-xs mt-1 text-slate-800 dark:text-slate-100 truncate">${n.title}</h5>
+        </div>
+      `).join('');
+    }
+
+    function renderRoutine() {
+      const tbody = document.getElementById('routineTableBody');
+      const activeData = (mockData[appState.currentFaculty] && mockData[appState.currentFaculty][appState.currentSemester]) || mockData.CSIT['5'];
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+      tbody.innerHTML = days.map(day => {
+        const sub1 = activeData.subjects[0];
+        const sub2 = activeData.subjects[1] || activeData.subjects[0];
+        const sub3 = activeData.subjects[2] || activeData.subjects[0];
+
+        return `
+          <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+            <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${day}</td>
+            <td class="p-4">
+              <div class="font-semibold text-xs text-brand-600 dark:text-brand-400">${sub1.name}</div>
+              <div class="text-[10px] text-slate-500">${sub1.teacher}</div>
+            </td>
+            <td class="p-4">
+              <div class="font-semibold text-xs text-brand-600 dark:text-brand-400">${sub2.name}</div>
+              <div class="text-[10px] text-slate-500">${sub2.teacher}</div>
+            </td>
+            <td class="p-4 text-center bg-slate-100/50 dark:bg-slate-700/20 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Break
+            </td>
+            <td class="p-4">
+              <div class="font-semibold text-xs text-brand-600 dark:text-brand-400">${sub3.name}</div>
+              <div class="text-[10px] text-slate-500">${sub3.teacher}</div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAttendance() {
+      const grid = document.getElementById('attendanceGrid');
+      const activeData = (mockData[appState.currentFaculty] && mockData[appState.currentFaculty][appState.currentSemester]) || mockData.CSIT['5'];
+
+      const mockStats = [
+        { present: 28, total: 30, pct: 93 },
+        { present: 22, total: 30, pct: 73 },
+        { present: 25, total: 30, pct: 83 },
+        { present: 27, total: 30, pct: 90 },
+        { present: 24, total: 30, pct: 80 }
+      ];
+
+      grid.innerHTML = activeData.subjects.map((sub, idx) => {
+        const stat = mockStats[idx % mockStats.length];
+        const isWarning = stat.pct < 75;
+        const barColor = isWarning ? 'bg-rose-500' : 'bg-emerald-500';
+
+        return `
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-bold text-sm">${sub.name}</h4>
+                <p class="text-xs text-slate-500">${sub.teacher}</p>
+              </div>
+              <span class="text-xs font-black px-2.5 py-1 rounded-lg ${isWarning ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'}">
+                ${stat.pct}%
+              </span>
+            </div>
+
+            <div>
+              <div class="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                <div class="${barColor} h-full rounded-full" style="width: ${stat.pct}%"></div>
+              </div>
+              <div class="flex justify-between items-center text-[11px] text-slate-500 mt-1.5 font-medium">
+                <span>Attended: ${stat.present}/${stat.total} classes</span>
+                ${isWarning ? '<span class="text-rose-500 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Low Attendance</span>' : '<span class="text-emerald-600 font-semibold">Eligible for Exam</span>'}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questionsContainer');
+      const activeData = (mockData[appState.currentFaculty] && mockData[appState.currentFaculty][appState.currentSemester]) || mockData.CSIT['5'];
+      const questions = activeData.questions || [];
+
+      if (questions.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 col-span-full">No question papers uploaded for this semester yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = questions.map(q => `
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-3 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">${q.type}</span>
+              <span class="font-bold text-slate-500">${q.year}</span>
+            </div>
+            <h4 class="font-bold text-sm mt-2 text-slate-800 dark:text-slate-100">${q.subject}</h4>
+            <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-file-pdf text-rose-500 mr-1"></i>${q.file} (${q.size})</p>
+          </div>
+
+          <div class="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+            <button onclick="previewPDF('${q.subject} ${q.year}')" class="flex-1 py-1.5 text-xs font-bold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl transition">Preview</button>
+            <button onclick="downloadPaper('${q.file}')" class="flex-1 py-1.5 text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white rounded-xl transition flex items-center justify-center gap-1">
+              <i class="fa-solid fa-download"></i> Download
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderNotes() {
+      const container = document.getElementById('notesContainer');
+      const activeData = (mockData[appState.currentFaculty] && mockData[appState.currentFaculty][appState.currentSemester]) || mockData.CSIT['5'];
+      const notes = activeData.notes || [];
+
+      container.innerHTML = notes.map(n => `
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">${n.subject}</span>
+            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">${n.chapter}</h4>
+            <p class="text-xs text-slate-400">Uploaded by ${n.author} • ${n.date}</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="previewPDF('${n.chapter}')" class="px-3 py-1.5 text-xs font-bold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-xl transition">
+              <i class="fa-solid fa-eye mr-1"></i> Read Online
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderAssignments() {
+      const container = document.getElementById('assignmentsList');
+      const activeData = (mockData[appState.currentFaculty] && mockData[appState.currentFaculty][appState.currentSemester]) || mockData.CSIT['5'];
+      const assignments = activeData.assignments || [];
+
+      container.innerHTML = assignments.map(a => {
+        const isSubmitted = a.status === 'Submitted';
+        return `
+          <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <span class="text-[10px] font-bold uppercase text-brand-600 dark:text-brand-400">${a.subject}</span>
+              <h4 class="font-bold text-sm">${a.title}</h4>
+              <p class="text-xs text-slate-400">Due Date: <strong class="text-rose-500">${a.dueDate}</strong></p>
+            </div>
+            <button onclick="openSubmitAssignmentModal('${a.title}')" class="px-4 py-2 text-xs font-bold rounded-xl transition ${isSubmitted ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-brand-600 hover:bg-brand-700 text-white shadow'}">
+              ${isSubmitted ? '<i class="fa-solid fa-circle-check mr-1"></i> Submitted' : '<i class="fa-solid fa-upload mr-1"></i> Submit Work'}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderNotices() {
+      const container = document.getElementById('noticesFullList');
+      container.innerHTML = noticesList.map(n => `
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">${n.category}</span>
+            <span class="text-xs text-slate-400">${n.date}</span>
+          </div>
+          <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">${n.title}</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${n.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById('notifList');
+      const badge = document.getElementById('notifBadge');
+
+      const unreadCount = notifications.filter(n => !n.read).length;
+      badge.style.display = unreadCount > 0 ? 'block' : 'none';
+
+      list.innerHTML = notifications.map(n => `
+        <div class="p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer">
+          <h5 class="font-bold text-xs text-slate-800 dark:text-slate-100">${n.title}</h5>
+          <p class="text-[11px] text-slate-500 truncate">${n.desc}</p>
+          <span class="text-[9px] text-slate-400">${n.time}</span>
+        </div>
+      `).join('');
+    }
+
+    /* Digital ID QR Code Generator */
+    function generateQRCode() {
+      const qrDiv = document.getElementById('qrcode');
+      qrDiv.innerHTML = '';
+      new QRCode(qrDiv, {
+        text: `MeroCampus-STUDENT-${appState.user.symbol}`,
+        width: 120,
+        height: 120
+      });
+    }
+
+    function flipIdCard() {
+      document.getElementById('idCardFlipInner').classList.toggle('rotate-y-180');
+    }
+
+    function printIdCard() {
+      window.print();
+    }
+
+    /* Modals Control */
+    function openModal(contentHtml) {
+      const modal = document.getElementById('globalModal');
+      const card = document.getElementById('modalCard');
+      card.innerHTML = contentHtml;
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        card.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('globalModal');
+      const card = document.getElementById('modalCard');
+      modal.classList.add('opacity-0');
+      card.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    /* Modal Templates */
+    function previewPDF(title) {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">Document Preview - ${title}</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-6 text-center space-y-4">
+          <div class="w-16 h-16 rounded-full bg-brand-100 text-brand-600 mx-auto flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-file-pdf"></i>
+          </div>
+          <h4 class="font-bold text-base">${title}.pdf</h4>
+          <p class="text-xs text-slate-500 max-w-sm mx-auto">This is a simulated interactive PDF document viewer. All text formatting, diagrams, and equations are compiled.</p>
+          <div class="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-left text-xs text-slate-600 dark:text-slate-300 font-mono">
+            [Sample PDF Content Stream]<br>
+            Section 1.1: Core System Architecture<br>
+            - Process Management & Interrupt Vectors<br>
+            - Memory Paging and Virtual Mapping...
+          </div>
+        </div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-700/30 flex justify-end">
+          <button onclick="closeModal()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">Done Reading</button>
+        </div>
+      `);
+    }
+
+    function openSubmitAssignmentModal(title) {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">Submit Assignment</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form onsubmit="handleAssignmentSubmit(event)" class="p-5 space-y-4">
+          <div>
+            <label class="text-xs font-semibold block mb-1">Assignment Title</label>
+            <input type="text" value="${title}" disabled class="w-full text-xs p-2.5 bg-slate-100 dark:bg-slate-700 rounded-xl font-bold">
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1">Upload File (PDF/ZIP)</label>
+            <input type="file" required class="w-full text-xs p-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl">
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1">Student Notes/Comments</label>
+            <textarea placeholder="Write any note for your professor..." class="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl h-20 focus:outline-none"></textarea>
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">Submit Solution</button>
+          </div>
+        </form>
+      `);
+    }
+
+    function handleAssignmentSubmit(e) {
+      e.preventDefault();
+      closeModal();
+      showToast("Assignment submitted successfully!", "success");
+    }
+
+    function simulateFeePayment() {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">Digital Fee Payment</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="bg-indigo-50 dark:bg-slate-700/50 p-4 rounded-xl text-center">
+            <span class="text-xs text-slate-500">Total Dues Amount</span>
+            <h2 class="text-2xl font-black text-brand-600">NPR 30,000</h2>
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-2">Select Digital Wallet</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="confirmPayment()" class="p-3 border border-emerald-500/30 rounded-xl text-xs font-bold hover:bg-emerald-50 dark:hover:bg-slate-700 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-wallet text-emerald-600"></i> eSewa / Khalti
+              </button>
+              <button onclick="confirmPayment()" class="p-3 border border-blue-500/30 rounded-xl text-xs font-bold hover:bg-blue-50 dark:hover:bg-slate-700 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-building-columns text-blue-600"></i> Mobile Banking
+              </button>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    function confirmPayment() {
+      closeModal();
+      showToast("Payment processed! Receipt emailed to student.", "success");
+    }
+
+    function viewNoticeDetail(id) {
+      const notice = noticesList.find(item => item.id === id) || noticesList[0];
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">${notice.category} Notice</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">${notice.category}</span>
+            <span class="text-[10px] text-slate-500">${notice.date}</span>
+          </div>
+          <h4 class="text-lg font-black text-slate-800 dark:text-slate-100">${notice.title}</h4>
+          <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${notice.text}</p>
+        </div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-700/30 flex justify-end">
+          <button onclick="closeModal()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">Close</button>
+        </div>
+      `);
+    }
+
+    function openUploadNotesModal() {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">Upload Study Material</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form onsubmit="handleUploadNotes(event)" class="p-5 space-y-4">
+          <div>
+            <label class="text-xs font-semibold block mb-1">Course</label>
+            <select class="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl">
+              <option>Operating Systems</option>
+              <option>Database Management Systems</option>
+              <option>Computer Networks</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1">Title</label>
+            <input type="text" value="Chapter 6 Notes" class="w-full text-xs p-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl">
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1">Upload File</label>
+            <input type="file" required class="w-full text-xs p-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl">
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-brand-600 text-white rounded-xl text-xs font-bold">Publish Material</button>
+        </form>
+      `);
+    }
+
+    function handleUploadNotes(e) {
+      e.preventDefault();
+      closeModal();
+      showToast('Study material uploaded successfully.', 'success');
+    }
+
+    function openUserManagementModal() {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">User Management</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-5 space-y-3">
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl">
+              <p class="text-slate-500">Students</p>
+              <h4 class="text-lg font-black text-slate-800 dark:text-slate-100">123</h4>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl">
+              <p class="text-slate-500">Teachers</p>
+              <h4 class="text-lg font-black text-slate-800 dark:text-slate-100">18</h4>
+            </div>
+          </div>
+          <div class="space-y-2 max-h-56 overflow-y-auto">
+            <div class="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-xs font-bold">
+              <span>Rohan Nepal</span>
+              <span class="text-emerald-600">Active</span>
+            </div>
+            <div class="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-xs font-bold">
+              <span>Prof. Dr. A. K. Sharma</span>
+              <span class="text-emerald-600">Active</span>
+            </div>
+            <div class="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-xs font-bold">
+              <span>Bikram KC</span>
+              <span class="text-amber-600">Pending</span>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    function openMarkAttendanceModal() {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">Mark Daily Attendance - Operating Systems</h3>
+          <button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-5 space-y-3">
+          <p class="text-xs text-slate-500">CSIT 5th Semester • Section A (24 Students)</p>
+          <div class="space-y-2 max-h-60 overflow-y-auto">
+            <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-xs font-bold">
+              <span>Rohan Nepal (Roll #14)</span>
+              <input type="checkbox" checked class="w-4 h-4 text-brand-600 rounded">
+            </div>
+            <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-xs font-bold">
+              <span>Ananya Adhikari (Roll #02)</span>
+              <input type="checkbox" checked class="w-4 h-4 text-brand-600 rounded">
+            </div>
+            <div class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded-xl text-xs font-bold">
+              <span>Bikram KC (Roll #08)</span>
+              <input type="checkbox" class="w-4 h-4 text-brand-600 rounded">
+            </div>
+          </div>
+          <button onclick="saveAttendance()" class="w-full py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold mt-2">
+            Submit Attendance Record
+          </button>
+        </div>
+      `);
+    }
+
+    function saveAttendance() {
+      closeModal();
+      showToast("Attendance updated for today's lecture!", "success");
+    }
+
+    function openPostNoticeModal() {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+          <h3 class="font-bold text-sm">Post New Campus Notice</h3>
+          <button onclick="closeModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form onsubmit="handlePostNotice(event)" class="p-5 space-y-3">
+          <div>
+            <label class="text-xs font-semibold block mb-1">Notice Title</label>
+            <input type="text" id="newNoticeTitle" required placeholder="e.g., Holiday Announcement" class="w-full text-xs p-2 bg-slate-50 dark:bg-slate-700 border rounded-xl">
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1">Category</label>
+            <select id="newNoticeCat" class="w-full text-xs p-2 bg-slate-50 dark:bg-slate-700 border rounded-xl">
+              <option value="Academic">Academic</option>
+              <option value="Exam">Exam</option>
+              <option value="Events">Events</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold block mb-1">Description</label>
+            <textarea id="newNoticeText" required class="w-full text-xs p-2 bg-slate-50 dark:bg-slate-700 border rounded-xl h-20"></textarea>
+          </div>
+          <button type="submit" class="w-full py-2 bg-purple-600 text-white font-bold rounded-xl text-xs">Publish Broadcast</button>
+        </form>
+      `);
+    }
+
+    function handlePostNotice(e) {
+      e.preventDefault();
+      const title = document.getElementById('newNoticeTitle').value;
+      const category = document.getElementById('newNoticeCat').value;
+      const text = document.getElementById('newNoticeText').value;
+
+      noticesList.unshift({
+        id: Date.now(),
+        title,
+        category,
+        date: "Today",
+        text
+      });
+
+      closeModal();
+      renderNotices();
+      renderDashboard();
+      showToast("Campus Notice Broadcasted!", "success");
+    }
+
+    function downloadRoutinePDF() {
+      showToast('Schedule exported successfully as PDF.', 'info');
+    }
+
+    /* Notification Helper */
+    function toggleNotificationDropdown() {
+      const drop = document.getElementById('notifDropdown');
+      drop.classList.toggle('hidden');
+    }
+
+    function clearNotifs() {
+      notifications.forEach(n => n.read = true);
+      renderNotifications();
+      showToast("All notifications marked as read", "info");
+    }
+
+    /* Toast Generator */
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-emerald-600 text-white',
+        warning: 'bg-amber-500 text-white',
+        info: 'bg-brand-600 text-white'
+      };
+
+      toast.className = `px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all transform translate-y-2 opacity-0 pointer-events-auto flex items-center gap-2 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${msg}`;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    /* Theme Switcher */
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        icon.className = 'fa-solid fa-moon';
+      } else {
+        html.classList.add('dark');
+        icon.className = 'fa-solid fa-sun';
+      }
+    }
+  </script>
+</body>
+</html>
